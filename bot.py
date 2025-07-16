@@ -1,4 +1,17 @@
+import os
+import logging
+from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove, Update
+from telegram.ext import (
+    Updater, CommandHandler, MessageHandler, Filters, ConversationHandler, CallbackContext
+)
+from docxtpl import DocxTemplate
+import pypandoc
 from docx import Document
+
+logging.basicConfig(level=logging.INFO)
+
+TOKEN = os.getenv("BOT_TOKEN")
+TEMPLATE_PATH = "zayava_template.docx"
 
 FIELD_KEYS = [
     "reg_number", "address",
@@ -52,5 +65,20 @@ def generate_template(path="zayava_template.docx"):
     doc.save(path)
     print(f"Шаблон збережено як {path}")
 
+def send_template(update, context):
+    path = TEMPLATE_PATH
+    if not os.path.exists(path):
+        generate_template(path)
+    with open(path, "rb") as f:
+        update.message.reply_document(f, filename="zayava_template.docx")
+    update.message.reply_text("✅ Ось шаблон для Word (docx).")
+
 if __name__ == "__main__":
-    generate_template("zayava_template.docx")
+    generate_template(TEMPLATE_PATH)
+
+    # Для використання в Telegram-боті:
+    # Додаєш цю команду у свій main:
+    #
+    # dp.add_handler(CommandHandler('template', send_template))
+    #
+    # Тоді користувач пише /template, а бот надсилає файл!
